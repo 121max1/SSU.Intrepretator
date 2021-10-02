@@ -6,6 +6,6 @@ namespace SSU.Intrepretator.LexicalAnalyzer
 {
     public class Lex
     {
-        
+        public LexType Type { get; set; }
     }
 }
