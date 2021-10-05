@@ -10,11 +10,11 @@ namespace SSU.Intrepretator.LexicalAnalyzer
 
     public class LexixalAnylyser
     {
-        private List<Lex> tokens;
 
+        public List<Lex> Tokens { get; private set; }
         public LexixalAnylyser()
         {
-            tokens = new List<Lex>();
+            Tokens = new List<Lex>();
         }
 
         private string[] _keyWords = { "do", "until", "loop", "not", "and", "or", "output" };
@@ -260,7 +260,7 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                 else lexClass = LexClass.Identifier;
             }
 
-            tokens.Add(new Lex(lexType, value, lexClass));
+            Tokens.Add(new Lex(lexType, value, lexClass));
         }
     }
 }
