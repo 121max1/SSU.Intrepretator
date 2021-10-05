@@ -8,7 +8,8 @@ namespace SSU.Intrepretator.ConsoleApp
         static void Main(string[] args)
         {
             LexixalAnylyser anylyser = new LexixalAnylyser();
-            anylyser.
+            var result = anylyser.LexAnalyzer("do until a<>5 a:=a+1 loop");
+            Console.WriteLine(result);
         }
     }
 }

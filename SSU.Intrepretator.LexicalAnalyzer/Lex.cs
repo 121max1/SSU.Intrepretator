@@ -6,9 +6,18 @@ namespace SSU.Intrepretator.LexicalAnalyzer
 {
     public class Lex
     {
-        public static int GlobalId { get; set; }
-        public LexType Type { get; set; }
-        public int id { get; set; }
+        public Lex(LexType type, string value, LexClass lexClass)
+        {
+            GlobalId++;
+            Type = type;
+            Value = value;
+            Class = lexClass;
+        }
 
+        public static int GlobalId { get; private set; }
+        public LexType Type { get; private set; }
+
+        public LexClass Class { get; private set; }
+        public string Value { get; private set; }
     }
 }
