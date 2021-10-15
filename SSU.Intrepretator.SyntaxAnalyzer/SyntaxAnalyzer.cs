@@ -106,7 +106,7 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
             return true;
         }
 
-        bool IsArithmExpression()
+        private bool IsArithmExpression()
         {
             if (!IsOperand()) return false;
             while(_current!=null && _current.Value.Type == LexType.Ao)

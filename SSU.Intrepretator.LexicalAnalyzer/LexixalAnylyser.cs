@@ -29,7 +29,7 @@ namespace SSU.Intrepretator.LexicalAnalyzer
             StringBuilder lexBufCur = new StringBuilder();
             int textIndex = 0;
             while(state != State.ERR && state!= State.FIN)
-            {
+            { 
                 prevState = state;
                 add = true;
                 if (textIndex == text.Length && state!=State.ERR)
