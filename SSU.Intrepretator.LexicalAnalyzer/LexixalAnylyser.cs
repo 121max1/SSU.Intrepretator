@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SSU.Intrepretator.LexicalAnalyzer
 {
-    public enum LexType {Do, Until, Loop, Not, And, Or, Output, Rel, Ao, As, Undefined }
+    public enum LexType {Do, Until, Loop, Not, And, Or, Output, Rel, Ao, As, Begin, End, Undefined }
 
     public enum LexClass {Keyword, Identifier, Constant, SpecialSymbols, Undefined }
 
@@ -18,7 +18,7 @@ namespace SSU.Intrepretator.LexicalAnalyzer
         }
 
         private string[] _keyWords = { "do", "until", "loop", "not", "and", "or", "output" };
-        enum State { S, ID, CON, ERR, FIN, COMP, COMPN, ARIFM, ASSIGN }
+        enum State { S, ID, CON, ERR, FIN, COMP, COMPN, ARIFM, ASSIGN, SEMICOLON, OPENPAREN, CLOSEPAREN }
 
         public bool LexAnalyzer(string text)
         {
@@ -51,6 +51,9 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                         else if (symbol == '<') state = State.COMPN;
                         else if (symbol == '=') state = State.COMP;
                         else if (symbol == '>') state = State.COMP;
+                        else if (symbol == ')') state = State.CLOSEPAREN;
+                        else if (symbol == '(') state = State.OPENPAREN;
+                        else if (symbol == ';') state = State.SEMICOLON;
                         else if (symbol == '+' || symbol == '-' || symbol == '/' || symbol == '*') state = State.ARIFM;
                         else if (symbol == ':') state = State.ASSIGN;
                         else state = State.ERR;
@@ -58,6 +61,28 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                         if (!char.IsWhiteSpace(symbol))
                             lexBufCur.Append(symbol);
                         break;
+                    case State.OPENPAREN:
+                        if (char.IsWhiteSpace(symbol))
+                        {
+                            state = State.S;
+                        }
+                        else if (char.IsLetter(symbol))
+                        {
+                            state = State.ID;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (char.IsDigit(symbol))
+                        {
+                            state = State.CON;
+                            lexBufNext.Append(symbol);
+                        }
+                        else
+                        {
+                            state = State.ERR;
+                            add = false;
+                        }
+                        break;
+
                     case State.COMP:
                         if (char.IsWhiteSpace(symbol))
                         {
@@ -251,6 +276,8 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                 else if (value.ToLower() == "output") lexType = LexType.Output;
                 else if (value.ToLower() == "do") lexType = LexType.Do;
                 else if (value.ToLower() == "until") lexType = LexType.Until;
+                else if (value.ToLower() == "begin") lexType = LexType.Begin;
+                else if (value.ToLower() == "end") lexType = LexType.End;
                 else
                 {
                     lexType = LexType.Undefined;

@@ -1,5 +1,6 @@
 ﻿using System;
 using SSU.Intrepretator.LexicalAnalyzer;
+using SSU.Intrepretator.SyntaxAnalyzer;
 
 namespace SSU.Intrepretator.ConsoleApp
 {
@@ -8,7 +9,7 @@ namespace SSU.Intrepretator.ConsoleApp
         static void Main(string[] args)
         {
             LexixalAnylyser anylyser = new LexixalAnylyser();
-            var result = anylyser.LexAnalyzer("do until a<>5 a:a+1 loop");
+            var result = anylyser.LexAnalyzer("begin do until a>5 b:=2+3+4*6 loop end");
             Console.WriteLine(result);
             if (result)
             {
@@ -17,6 +18,8 @@ namespace SSU.Intrepretator.ConsoleApp
                     Console.WriteLine($"Class: {item.Class}, Type: {item.Type}, Value {item.Value}, Id: {item.Id}");
                 }
             }
+            var syntAnalyzer = new SyntAnalyzer(anylyser.Tokens);
+            Console.WriteLine(syntAnalyzer.Run());
         }
     }
 }

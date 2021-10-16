@@ -4,8 +4,9 @@ using System.Linq;
 
 namespace SSU.Intrepretator.SyntaxAnalyzer
 {
-    public class SyntaxAnalyzer
+    public class SyntAnalyzer
     {
+
         private readonly LexBuffer buffer;
         //private List<Lex> _tokens;
         private LinkedList<Lex> _tokens;
@@ -13,25 +14,39 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
 
 
 
-        public SyntaxAnalyzer(List<Lex> tokens)
+        public SyntAnalyzer(List<Lex> tokens)
         {
             buffer = new LexBuffer(tokens);
+            _tokens = new LinkedList<Lex>();
             foreach (var item in tokens)
             {
                 _tokens.AddLast(item);
             }
             _current = _tokens.First;
         }
-        public void Run()
+        public bool Run()
         {
-
-            foreach (var token in _tokens)
-            {
-
-            }
+            return IsProgram();
         }
 
-        private bool IsWhileStatement(int startIndex)
+        private bool IsProgram()
+        {
+            if (_current is null | _current.Value.Type != LexType.Begin)
+            {
+                return false;
+            }
+
+            _current = _current.Next;
+
+            if (!IsWhileStatement()) return false;
+
+            if (_current is null | _current.Value.Type != LexType.End)
+            {
+                return false;
+            }
+            return true;
+        }
+        private bool IsWhileStatement()
         {
             if (_current is null | _current.Value.Type!= LexType.Do)
             {
@@ -42,20 +57,36 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
             {
                 return false;
             }
-
-            
-     
-
+            _current = _current.Next;
+            if (!IsCondition()) return false;
+            if (!IsAssignmentStatement()) return false;
+            if(_current is null | _current.Value.Type!= LexType.Loop)
+            {
+                return false;
+            }
+            _current = _current.Next;
+            return true;
         }
 
         private bool IsCondition()
         {
-
+            if (!IsLogExpession()) return false;
+            while(_current!=null & _current.Value.Type==LexType.Or){
+                _current = _current.Next;
+                if (!IsLogExpession()) return false;
+            }
+            return true;
         }
 
         private bool IsLogExpession()
         {
-
+            if (!IsRelExpression()) return false;
+            while(_current != null && _current.Value.Type == LexType.And)
+            {
+                _current = _current.Next;
+                if (!IsRelExpression()) return false;
+            }
+            return true;
         }
 
         private bool IsRelExpression()
@@ -97,9 +128,9 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
                 return false;
             }
             _current = _current.Next;
-            if(_current != null || _current.Value.Type != LexType.As)
+            if(_current is null | _current.Value.Type != LexType.As)
             {
-                return false;
+               return false;
             }
             _current = _current.Next;
             if (!IsArithmExpression()) return false;

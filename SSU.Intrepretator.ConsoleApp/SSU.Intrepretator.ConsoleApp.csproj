@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SSU.Intrepretator.LexicalAnalyzer\SSU.Intrepretator.LexicalAnalyzer.csproj" />
+    <ProjectReference Include="..\SSU.Intrepretator.SyntaxAnalyzer\SSU.Intrepretator.SyntaxAnalyzer.csproj" />
   </ItemGroup>
 
 </Project>
