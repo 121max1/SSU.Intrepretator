@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SSU.Intrepretator.LexicalAnalyzer
 {
-    public enum LexType {Do, Until, Loop, Not, And, Or, Output, Rel, Ao, As, Begin, End, Undefined }
+    public enum LexType {Do, Until, Loop, Not, And, Or, Output, Rel, Ao, As, Begin, End, SEMICOLON, OPENPAREN, CLOSEPAREN, Undefined }
 
     public enum LexClass {Keyword, Identifier, Constant, SpecialSymbols, Undefined }
 
@@ -62,27 +62,62 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                             lexBufCur.Append(symbol);
                         break;
                     case State.OPENPAREN:
-                        if (char.IsWhiteSpace(symbol))
-                        {
-                            state = State.S;
-                        }
-                        else if (char.IsLetter(symbol))
-                        {
-                            state = State.ID;
-                            lexBufNext.Append(symbol);
-                        }
-                        else if (char.IsDigit(symbol))
-                        {
-                            state = State.CON;
-                            lexBufNext.Append(symbol);
-                        }
+                        if (char.IsWhiteSpace(symbol)) state = State.S;
+                        else if (char.IsLetter(symbol)) state = State.ID;
+                        else if (char.IsDigit(symbol)) state = State.CON;
+                        else if (symbol == '<') state = State.COMPN;
+                        else if (symbol == '=') state = State.COMP;
+                        else if (symbol == '>') state = State.COMP;
+                        else if (symbol == ')') state = State.CLOSEPAREN;
+                        else if (symbol == '(') state = State.OPENPAREN;
+                        else if (symbol == ';') state = State.SEMICOLON;
+                        else if (symbol == '+' || symbol == '-' || symbol == '/' || symbol == '*') state = State.ARIFM;
+                        else if (symbol == ':') state = State.ASSIGN;
                         else
                         {
                             state = State.ERR;
                             add = false;
                         }
+                        if(state != State.S) lexBufNext.Append(symbol);
                         break;
-
+                    case State.CLOSEPAREN:
+                        if (char.IsWhiteSpace(symbol)) state = State.S;
+                        else if (char.IsLetter(symbol)) state = State.ID;
+                        else if (char.IsDigit(symbol)) state = State.CON;
+                        else if (symbol == '<') state = State.COMPN;
+                        else if (symbol == '=') state = State.COMP;
+                        else if (symbol == '>') state = State.COMP;
+                        else if (symbol == ')') state = State.CLOSEPAREN;
+                        else if (symbol == '(') state = State.OPENPAREN;
+                        else if (symbol == ';') state = State.SEMICOLON;
+                        else if (symbol == '+' || symbol == '-' || symbol == '/' || symbol == '*') state = State.ARIFM;
+                        else if (symbol == ':') state = State.ASSIGN;
+                        else
+                        {
+                            state = State.ERR;
+                            add = false;
+                        }
+                        if (state != State.S) lexBufNext.Append(symbol);
+                        break;
+                    case State.SEMICOLON:
+                        if (char.IsWhiteSpace(symbol)) state = State.S;
+                        else if (char.IsLetter(symbol)) state = State.ID;
+                        else if (char.IsDigit(symbol)) state = State.CON;
+                        else if (symbol == '<') state = State.COMPN;
+                        else if (symbol == '=') state = State.COMP;
+                        else if (symbol == '>') state = State.COMP;
+                        else if (symbol == ')') state = State.CLOSEPAREN;
+                        else if (symbol == '(') state = State.OPENPAREN;
+                        else if (symbol == ';') state = State.SEMICOLON;
+                        else if (symbol == '+' || symbol == '-' || symbol == '/' || symbol == '*') state = State.ARIFM;
+                        else if (symbol == ':') state = State.ASSIGN;
+                        else
+                        {
+                            state = State.ERR;
+                            add = false;
+                        }
+                        if (state != State.S) lexBufNext.Append(symbol);
+                        break;
                     case State.COMP:
                         if (char.IsWhiteSpace(symbol))
                         {
@@ -96,6 +131,21 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                         else if (char.IsDigit(symbol))
                         {
                             state = State.CON;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == '(')
+                        {
+                            state = State.OPENPAREN;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == ')')
+                        {
+                            state = State.CLOSEPAREN;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == ';')
+                        {
+                            state = State.SEMICOLON;
                             lexBufNext.Append(symbol);
                         }
                         else
@@ -120,6 +170,21 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                         else if (char.IsDigit(symbol))
                         {
                             state = State.CON;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == '(')
+                        {
+                            state = State.OPENPAREN;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == ')')
+                        {
+                            state = State.CLOSEPAREN;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == ';')
+                        {
+                            state = State.SEMICOLON;
                             lexBufNext.Append(symbol);
                         }
                         else
@@ -162,6 +227,21 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                             state = State.ARIFM;
                             lexBufNext.Append(symbol);
                         }
+                        else if (symbol == '(')
+                        {
+                            state = State.OPENPAREN;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == ')')
+                        {
+                            state = State.CLOSEPAREN;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == ';')
+                        {
+                            state = State.SEMICOLON;
+                            lexBufNext.Append(symbol);
+                        }
                         else
                         {
                             state = State.ERR;
@@ -196,6 +276,21 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                             state = State.ASSIGN;
                             lexBufNext.Append(symbol);
                         }
+                        else if (symbol == '(')
+                        {
+                            state = State.OPENPAREN;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == ')')
+                        {
+                            state = State.CLOSEPAREN;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == ';')
+                        {
+                            state = State.SEMICOLON;
+                            lexBufNext.Append(symbol);
+                        }
                         else
                         {
                             state = State.ERR;
@@ -217,6 +312,21 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                             state = State.CON;
                             lexBufNext.Append(symbol);
                         }
+                        else if (symbol == '(')
+                        {
+                            state = State.OPENPAREN;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == ')')
+                        {
+                            state = State.CLOSEPAREN;
+                            lexBufNext.Append(symbol);
+                        }
+                        else if (symbol == ';')
+                        {
+                            state = State.SEMICOLON;
+                            lexBufNext.Append(symbol);
+                        }
                         else
                         {
                             state = State.ERR;
@@ -226,7 +336,7 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                 }
                 if (add)
                 {
-                    AddLex(prevState, lexBufCur.ToString());
+                    AddLex(prevState, lexBufCur.ToString(), textIndex);
                     lexBufCur = new StringBuilder(lexBufNext.ToString());
                     lexBufNext.Clear();
                 }
@@ -237,33 +347,48 @@ namespace SSU.Intrepretator.LexicalAnalyzer
 
         }
 
-        private void AddLex(State prevState, string value)
+        private void AddLex(State prevState, string value,int textIndex)
         {
             LexType lexType = LexType.Undefined;
             LexClass lexClass = LexClass.Undefined;
-            if(prevState == State.ARIFM)
+            if (prevState == State.ARIFM)
             {
                 lexType = LexType.Ao;
                 lexClass = LexClass.SpecialSymbols;
             }
-            else if(prevState == State.ASSIGN)
+            else if (prevState == State.ASSIGN)
             {
                 lexType = LexType.As;
                 lexClass = LexClass.SpecialSymbols;
             }
-            else if(prevState == State.CON)
+            else if (prevState == State.CON)
             {
                 lexType = LexType.Undefined;
                 lexClass = LexClass.Constant;
             }
-            else if(prevState == State.COMPN)
+            else if (prevState == State.COMPN)
             {
                 lexType = LexType.Rel;
                 lexClass = LexClass.SpecialSymbols;
             }
-            else if(prevState == State.COMP)
+            else if (prevState == State.COMP)
             {
                 lexType = LexType.Rel;
+                lexClass = LexClass.SpecialSymbols;
+            }
+            else if(prevState == State.CLOSEPAREN)
+            {
+                lexType = LexType.CLOSEPAREN;
+                lexClass = LexClass.SpecialSymbols;
+            }
+            else if (prevState == State.OPENPAREN)
+            {
+                lexType = LexType.OPENPAREN;
+                lexClass = LexClass.SpecialSymbols;
+            }
+            else if (prevState == State.SEMICOLON)
+            {
+                lexType = LexType.SEMICOLON;
                 lexClass = LexClass.SpecialSymbols;
             }
             else if(prevState == State.ID)
@@ -287,7 +412,7 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                 else lexClass = LexClass.Identifier;
             }
 
-            Tokens.Add(new Lex(lexType, value, lexClass));
+            Tokens.Add(new Lex(lexType, value, lexClass, textIndex));
         }
     }
 }
