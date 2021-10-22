@@ -9,7 +9,7 @@ namespace SSU.Intrepretator.ConsoleApp
         static void Main(string[] args)
         {
             LexixalAnylyser anylyser = new LexixalAnylyser();
-            var resultLex = anylyser.LexAnalyzer("begin a:=(begin1+5*(2+2)*2); b:=1; do until a<5 a:=a+1; output a; b:=b*2; output b; loop end");
+            var resultLex = anylyser.LexAnalyzer("begin a:=begin1+5*(2+2)*2; b:=1; do until a<5 a:=a+1; output a; b:=b*2; output b; loop end");
             Console.WriteLine(resultLex);
             if (resultLex)
             {
