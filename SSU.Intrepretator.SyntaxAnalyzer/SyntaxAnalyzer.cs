@@ -4,6 +4,10 @@ using System.Linq;
 
 namespace SSU.Intrepretator.SyntaxAnalyzer
 {
+    public enum EntryType { Command, Variable, Constant, CommandPointer }
+
+    public enum CommandType {JMP , JZ, SET, ADD, SUB, MULT, DIV, AND, OR, CMPE, CMPNE, CMPl, CMPG,}
+
     public class SyntAnalyzer
     {
 

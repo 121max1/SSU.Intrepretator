@@ -5,14 +5,11 @@ using System.Text;
 
 namespace SSU.Intrepretator.SyntaxAnalyzer
 {
-    public class Node
+    public class PostfixEntrry
     {
+        public CommandType Type { get; set; }
 
-        public int Level { get; set; }
-        public Lex Token { get; set; }
+        public int Index { get; set; }
 
-        
-
-        
     }
 }
