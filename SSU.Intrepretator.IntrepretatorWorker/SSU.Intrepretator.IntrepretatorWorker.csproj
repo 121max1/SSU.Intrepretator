@@ -1,13 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SSU.Intrepretator.IntrepretatorWorker\SSU.Intrepretator.IntrepretatorWorker.csproj" />
-    <ProjectReference Include="..\SSU.Intrepretator.LexicalAnalyzer\SSU.Intrepretator.LexicalAnalyzer.csproj" />
     <ProjectReference Include="..\SSU.Intrepretator.SyntaxAnalyzer\SSU.Intrepretator.SyntaxAnalyzer.csproj" />
   </ItemGroup>
 

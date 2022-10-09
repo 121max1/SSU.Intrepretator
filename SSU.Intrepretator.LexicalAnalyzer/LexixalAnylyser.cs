@@ -211,6 +211,7 @@ namespace SSU.Intrepretator.LexicalAnalyzer
                         {
                             state = State.CON;
                             lexBufCur.Append(symbol);
+                            add = false;
                         }
                         else if (symbol == '<')
                         {
@@ -349,6 +350,10 @@ namespace SSU.Intrepretator.LexicalAnalyzer
 
         private void AddLex(State prevState, string value,int textIndex)
         {
+            if(value == "")
+            {
+                return;
+            }
             LexType lexType = LexType.Undefined;
             LexClass lexClass = LexClass.Undefined;
             if (prevState == State.ARIFM)

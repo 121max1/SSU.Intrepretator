@@ -6,21 +6,27 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
 {
     public enum EntryType { Command, Variable, Constant, CommandPointer }
 
-    public enum CommandType {JMP , JZ, SET, ADD, SUB, MULT, DIV, AND, OR, CMPE, CMPNE, CMPl, CMPG,}
+    public enum CommandType {JMP, JZ, SET, ADD, SUB, MULT, DIV, AND, OR, CMPE, CMPNE, CMPl, CMPG, None, OUT}
 
     public class SyntAnalyzer
     {
-
-        private readonly LexBuffer buffer;
-        //private List<Lex> _tokens;
         private LinkedList<Lex> _tokens;
         private LinkedListNode<Lex> _current;
         private Result result;
+        public List<PostfixEntry> _reversePolishNotation;
+        public Dictionary<int, int> _constants;
+        public Dictionary<int, string> _variables;
+        public Dictionary<int, int> _pointers;
+        private int _currentPolishNotationId;
+
 
 
         public SyntAnalyzer(List<Lex> tokens)
         {
-            buffer = new LexBuffer(tokens);
+            _reversePolishNotation = new List<PostfixEntry>();
+            _constants = new Dictionary<int, int>();
+            _variables = new Dictionary<int, string>();
+            _pointers = new Dictionary<int, int>();
             _tokens = new LinkedList<Lex>();
             foreach (var item in tokens)
             {
@@ -82,6 +88,7 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
 
         private bool IsWhileStatement()
         {
+            int indFirst = _currentPolishNotationId;//??
             if (_current is null | _current.Value.Type!= LexType.Do)
             {
                 result = new Result(false, $"Ожидается do на позиции {_current.Value.Position}");
@@ -95,6 +102,8 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
             }
             _current = _current.Next;
             if (!IsCondition()) return false;
+            int indJmp = WriteCmdPtr(-1);
+            WriteCmd(CommandType.JZ);
             while(_current.Value.Type!=LexType.Loop)
             {
                 var start = _current;
@@ -108,6 +117,10 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
                     _current = start;
                 }
                 if (IsOutputExpression())
+                {
+                    continue;
+                }
+                if (IsWhileStatement())
                 {
                     continue;
                 }
@@ -126,6 +139,9 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
                 result = new Result(false, $"Ожидается loop на позиции {_current.Value.Position}");
                 return false;
             }
+            WriteCmdPtr(indFirst);
+            int indLast = WriteCmd(CommandType.JMP);
+            SetCmdPtr(indJmp, indLast + 1);
             _current = _current.Next;
             return true;
         }
@@ -136,6 +152,7 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
             while(_current!=null & _current.Value.Type==LexType.Or){
                 _current = _current.Next;
                 if (!IsLogExpession()) return false;
+                WriteCmd(CommandType.OR);
             }
             return true;
         }
@@ -147,6 +164,7 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
             {
                 _current = _current.Next;
                 if (!IsRelExpression()) return false;
+                WriteCmd(CommandType.AND);
             }
             return true;
         }
@@ -156,8 +174,15 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
             if (!IsOperand()) return false;
             if (_current.Next != null && _current.Value.Type == LexType.Rel)
             {
+                CommandType command = default;
+                if (_current.Value.Value == ">") command = CommandType.CMPG;
+                else if (_current.Value.Value == "<") command = CommandType.CMPl;
+                else if (_current.Value.Value == "=") command = CommandType.CMPE;
+                else if (_current.Value.Value == "<>") command = CommandType.CMPNE;
                 _current = _current.Next;
                 if (!IsOperand()) return false;
+                WriteCmd(command);
+
             }
             return true;
         }
@@ -169,6 +194,8 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
                 result = new Result(false, $"Ожидается индентификатор или константа на позиции {_current.Value.Position}");
                 return false;
             }
+            if (_current.Value.Class == LexClass.Identifier) WriteVar(_currentPolishNotationId);
+            else WriteConst(_currentPolishNotationId);
             _current = _current.Next;
             return true;
 
@@ -191,6 +218,7 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
                 result = new Result(false, $"Ожидается индентификатор на позиции {_current.Value.Position}");
                 return false;
             }
+            WriteVar(_currentPolishNotationId);
             _current = _current.Next;
             if(_current is null | _current.Value.Type != LexType.As)
             {
@@ -204,6 +232,7 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
                 result = new Result(false, $"Ожидается ; на позиции {_current.Value.Position}");
                 return false;
             }
+            WriteCmd(CommandType.SET);
             _current = _current.Next;
             return true;
         }
@@ -227,17 +256,21 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
                 return false;
             }
             _current = _current.Next;
+
             if (_current.Value.Class != LexClass.Constant && _current.Value.Class != LexClass.Identifier)
             {
                 result = new Result(false, $"Ожидается константа или идентификатор на позиции {_current.Value.Position}");
                 return false;
             }
+            if (_current.Value.Class == LexClass.Constant) WriteConst(_currentPolishNotationId);
+            else if (_current.Value.Class == LexClass.Identifier) WriteVar(_currentPolishNotationId);
             _current = _current.Next;
             if (_current.Value.Type != LexType.SEMICOLON)
             {
                 result = new Result(false, $"Ожидается ; на позиции {_current.Value.Position}");
                 return false;
             }
+            WriteCmd(CommandType.OUT);
             _current = _current.Next;
             return true;
         }
@@ -245,10 +278,15 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
         private bool IsExpression()
         {
             if (!IsTerm()) return false;
-            while(_current.Value.Value == "*" || _current.Value.Value == "/")
+            while(_current.Value.Value == "+" || _current.Value.Value == "-")
             {
+                CommandType command = default;
+                if (_current.Value.Value == "+") command = CommandType.ADD;
+                else if (_current.Value.Value == "-") command = CommandType.SUB;
                 _current = _current.Next;
+                //WriteCmd(command);
                 if (!IsFactor()) return false;
+                WriteCmd(command);
             }
             return true;
 
@@ -257,10 +295,15 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
         private bool IsTerm()
         {
             if (!IsFactor()) return false;
-            while(_current.Value.Value == "+" || _current.Value.Value == "-")
+            while(_current.Value.Value == "*" || _current.Value.Value == "/")
             {
+                CommandType command = default;
+                if (_current.Value.Value == "*") command = CommandType.MULT;
+                else if (_current.Value.Value == "/") command = CommandType.DIV;// если что свапнуть +-
                 _current = _current.Next;
                 IsFactor();
+                WriteCmd(command);
+
             }
             return true;
         }
@@ -269,6 +312,7 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
         {
             if (_current.Value.Class == LexClass.Identifier)
             {
+                WriteVar(_currentPolishNotationId);
                 _current = _current.Next;
                 if (_current.Value.Type == LexType.OPENPAREN)
                 {
@@ -285,6 +329,7 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
             }
             else if (_current.Value.Class == LexClass.Constant)
             {
+                WriteConst(_currentPolishNotationId);
                 _current = _current.Next;
             }
             else if (_current.Value.Type == LexType.OPENPAREN)
@@ -313,5 +358,62 @@ namespace SSU.Intrepretator.SyntaxAnalyzer
         }
 
 
+        private int WriteVar(int id)
+        {
+            _reversePolishNotation.Add(new PostfixEntry(EntryType.Variable, id));
+            _variables.Add(id, _current.Value.Value);
+            return _currentPolishNotationId++;
+        }
+
+        private int WriteCmd(CommandType cmd)
+        {
+            _reversePolishNotation.Add(new PostfixEntry(cmd, _currentPolishNotationId));
+            return _currentPolishNotationId++;
+        }
+
+        private int WriteConst(int id)
+        {
+            _reversePolishNotation.Add(new PostfixEntry(EntryType.Constant, id));
+            _constants.Add(id, int.Parse(_current.Value.Value));
+            return _currentPolishNotationId++;
+        }
+
+        private int WriteCmdPtr(int ptr)
+        {
+            _reversePolishNotation.Add(new PostfixEntry(EntryType.CommandPointer, _currentPolishNotationId));
+            _pointers.Add(_currentPolishNotationId, ptr);
+            return _currentPolishNotationId++;
+        }
+
+        void SetCmdPtr(int ind, int ptr)
+        {
+            _pointers[ind] = ptr;
+        }
+
+        public string GetInversedPolishNotation()
+        {
+            string result = "";
+            foreach(var entry in _reversePolishNotation)
+            {
+                if(entry.EntryType == EntryType.Constant)
+                {
+                    result += _constants[entry.Index];
+                }
+                else if(entry.EntryType == EntryType.Variable)
+                {
+                    result += _variables[entry.Index];
+                }
+                else if(entry.EntryType == EntryType.Command)
+                {
+                    result += entry.Type.ToString();
+                }
+                else if(entry.EntryType == EntryType.CommandPointer)
+                {
+                    result += _pointers[entry.Index];
+                }
+                result += " ";
+            }
+            return result;
+        }
     }
 }
